@@ -4,7 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { ReactNode, useMemo } from "react";
 import { Task, TaskCard } from "./TaskCard";
 import { cva } from "class-variance-authority";
-import { Card, CardContent, CardHeader } from "./ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import { GripVertical } from "lucide-react";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
@@ -79,7 +79,7 @@ export function BoardColumn({ column, tasks, isOverlay,cardHeader,cardFooter }: 
         dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
       })}
     >
-      <CardHeader className="p-4 font-semibold border-b-2 text-left flex flex-row space-between items-center">
+      <CardHeader className="p-4 font-semibold border-b-2 text-left flex flex-row justify-start items-center">
         <Button
           variant={"ghost"}
           {...attributes}
@@ -89,8 +89,8 @@ export function BoardColumn({ column, tasks, isOverlay,cardHeader,cardFooter }: 
           <span className="sr-only">{`Move column: ${column.title}`}</span>
           <GripVertical />
         </Button>
-        <span className="ml-auto"> {column.title}</span>
-        {cardHeader}
+        <span className="ml-0 font-extrabold"> {column.title}</span>
+        <div className="ml-56">{cardHeader}</div>
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
@@ -101,7 +101,8 @@ export function BoardColumn({ column, tasks, isOverlay,cardHeader,cardFooter }: 
           </SortableContext>
         </CardContent>
       </ScrollArea>
-      {cardFooter}     
+      <CardFooter className="p-4 font-semibold border-b-2 text-left flex flex-row space-between items-center">      {cardFooter}     
+      </CardFooter>
     </Card>
   );
 }

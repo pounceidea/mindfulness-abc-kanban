@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import confetti from "canvas-confetti";
 
@@ -32,15 +32,15 @@ import { Input } from "./ui/input";
 const defaultCols = [
   {
     id: "todo" as const,
-    title: "Todo",
+    title: "A",
   },
   {
     id: "in-progress" as const,
-    title: "In progress",
+    title: "B",
   },
   {
     id: "done" as const,
-    title: "Done",
+    title: "C",
   },
 ] satisfies Column[];
 
@@ -53,79 +53,74 @@ const initialTasks: Task[] = [
   {
     id: "task1",
     columnId: "done",
-    content: "Project initiation and planning",
+    content: "Tomorrow is a mystery",
   },
   {
     id: "task2",
-    columnId: "done",
-    content: "Gather requirements from stakeholders",
+    columnId: "in-progress",
+    content: "Present is a gift 🎁",
   },
   {
     id: "task3",
-    columnId: "done",
-    content: "Create wireframes and mockups",
-  },
-  {
-    id: "task4",
-    columnId: "in-progress",
-    content: "Develop homepage layout",
-  },
-  {
-    id: "task5",
-    columnId: "in-progress",
-    content: "Design color scheme and typography",
-  },
-  {
-    id: "task6",
     columnId: "todo",
-    content: "Implement user authentication",
+    content: "Yesterday is history",
   },
-  {
-    id: "task7",
-    columnId: "todo",
-    content: "Build contact us page",
-  },
-  {
-    id: "task8",
-    columnId: "todo",
-    content: "Create product catalog",
-  },
-  {
-    id: "task9",
-    columnId: "todo",
-    content: "Develop about us page",
-  },
-  {
-    id: "task10",
-    columnId: "todo",
-    content: "Optimize website for mobile devices",
-  },
-  {
-    id: "task11",
-    columnId: "todo",
-    content: "Integrate payment gateway",
-  },
-  {
-    id: "task12",
-    columnId: "todo",
-    content: "Perform testing and bug fixing",
-  },
-  {
-    id: "task13",
-    columnId: "todo",
-    content: "Launch website and deploy to server",
-  },
+  
 ];
 export function KanbanBoard() {
-  const [columns, setColumns] = useState<Column[]>(defaultCols);
+  // const [columns, setColumns] = useState<Column[]>(defaultCols);
   const pickedUpTaskColumn = useRef<ColumnId | null>(null);
-  const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  // const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
 
+  const [columns, setColumns] = useState<Column[]>(() => {
+    const savedColumns = localStorage.getItem('kanban-columns');
+    if (savedColumns) {
+      try {
+        const parsedColumns = JSON.parse(savedColumns);
+        if (Array.isArray(parsedColumns) && parsedColumns.length > 0) {
+          return parsedColumns;
+        } else {
+          return defaultCols;
+        }
+      } catch (error) {
+        console.error('Error parsing columns from localStorage', error);
+        return defaultCols;
+      }
+    }
+    return defaultCols;
+  });
+
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const savedTasks = localStorage.getItem('kanban-tasks');
+    if (savedTasks) {
+      try {
+        const parsedTasks = JSON.parse(savedTasks);
+        if (Array.isArray(parsedTasks) && parsedTasks.length > 0) {
+          return parsedTasks;
+        } else {
+          return initialTasks;
+        }
+      } catch (error) {
+        console.error('Error parsing tasks from localStorage', error);
+        return initialTasks;
+      }
+    }
+    return initialTasks;
+  });
+  const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
+
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('kanban-columns', JSON.stringify(columns));
+  }, [columns]);
+  
+  useEffect(() => {
+    localStorage.setItem('kanban-tasks', JSON.stringify(tasks));
+  }, [tasks]);
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -274,7 +269,7 @@ export function KanbanBoard() {
     return (
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button>
+          <Button className="w-full bg-green-700 hover:bg-green-900">
             <Plus className="mr-2" /> Add Task
           </Button>
         </DialogTrigger>
@@ -289,7 +284,7 @@ export function KanbanBoard() {
               placeholder="Task content"
               required
             />
-            <Button type="submit" className="mt-2">
+            <Button type="submit" className="mt-2 bg-green-700">
               Add Task
             </Button>
           </form>
@@ -315,8 +310,8 @@ export function KanbanBoard() {
               column={col}
               tasks={tasks.filter((task) => task.columnId === col.id)}
               cardHeader={<>
-               <Button variant="destructive" size="sm" onClick={() => handleClearColumn(col.id as any)}>
-                  <Trash2 />
+               <Button className="ml-2x bg-transparent hover:bg-green-50" size="sm" onClick={() => handleClearColumn(col.id as any)}>
+                  <Trash2 color="green"/>
                 </Button></>}
               cardFooter={<>
                             <AddTaskDialog onAddTask={(content) => handleAddTask(col.id as any, content)} />
