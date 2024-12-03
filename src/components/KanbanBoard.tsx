@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import confetti from "canvas-confetti";
 
 import { BoardColumn, BoardContainer } from "./BoardColumn";
 import {
@@ -21,6 +24,10 @@ import { type Task, TaskCard } from "./TaskCard";
 import type { Column } from "./BoardColumn";
 import { hasDraggableData } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
+import { Button } from "./ui/button";
+import { Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "./ui/input";
 
 const defaultCols = [
   {
@@ -38,6 +45,9 @@ const defaultCols = [
 ] satisfies Column[];
 
 export type ColumnId = (typeof defaultCols)[number]["id"];
+export interface AddTaskDialogProps {
+  onAddTask: (content: string) => void;
+}
 
 const initialTasks: Task[] = [
   {
@@ -149,7 +159,7 @@ export function KanbanBoard() {
         pickedUpTaskColumn.current = active.data.current.task.columnId;
         const { tasksInColumn, taskPosition, column } = getDraggingTaskData(
           active.id,
-          pickedUpTaskColumn.current
+          pickedUpTaskColumn.current as any
         );
         return `Picked up Task ${
           active.data.current.task.content
@@ -230,7 +240,63 @@ export function KanbanBoard() {
       return `Dragging ${active.data.current?.type} cancelled.`;
     },
   };
+  const triggerConfetti = (): void => {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+  };
 
+  const handleClearColumn = (columnId: ColumnId): void => {
+    setTasks((prev) => prev.filter((task) => task.columnId !== columnId));
+    triggerConfetti();
+  };
+
+  const handleClearAll = (): void => {
+    setTasks([]);
+    triggerConfetti();
+  };
+
+  const handleAddTask = (columnId: ColumnId, content: string): void => {
+    const newTask: Task = { id: `task-${Date.now()}`, columnId, content };
+    setTasks((prev) => [...prev, newTask]);
+  };
+  function AddTaskDialog({ onAddTask }: AddTaskDialogProps) {
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [content, setContent] = useState<string>("");
+  
+    const handleSubmit = (e: React.FormEvent): void => {
+      e.preventDefault();
+      if (content.trim()) {
+        onAddTask(content);
+        setContent("");
+        setIsOpen(false);
+      }
+    };
+  
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2" /> Add Task
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Task</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <Input
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Task content"
+              required
+            />
+            <Button type="submit" className="mt-2">
+              Add Task
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  }
   return (
     <DndContext
       accessibility={{
@@ -248,6 +314,14 @@ export function KanbanBoard() {
               key={col.id}
               column={col}
               tasks={tasks.filter((task) => task.columnId === col.id)}
+              cardHeader={<>
+               <Button variant="destructive" size="sm" onClick={() => handleClearColumn(col.id as any)}>
+                  <Trash2 />
+                </Button></>}
+              cardFooter={<>
+                            <AddTaskDialog onAddTask={(content) => handleAddTask(col.id as any, content)} />
+
+              </>}
             />
           ))}
         </SortableContext>

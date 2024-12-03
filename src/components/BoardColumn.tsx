@@ -1,7 +1,7 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { useDndContext, type UniqueIdentifier } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useMemo } from "react";
+import { ReactNode, useMemo } from "react";
 import { Task, TaskCard } from "./TaskCard";
 import { cva } from "class-variance-authority";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -25,9 +25,12 @@ interface BoardColumnProps {
   column: Column;
   tasks: Task[];
   isOverlay?: boolean;
+  cardHeader?:ReactNode;
+  cardFooter?:ReactNode
+
 }
 
-export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
+export function BoardColumn({ column, tasks, isOverlay,cardHeader,cardFooter }: BoardColumnProps) {
   const tasksIds = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
@@ -87,6 +90,7 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
           <GripVertical />
         </Button>
         <span className="ml-auto"> {column.title}</span>
+        {cardHeader}
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
@@ -97,6 +101,7 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
           </SortableContext>
         </CardContent>
       </ScrollArea>
+      {cardFooter}     
     </Card>
   );
 }
